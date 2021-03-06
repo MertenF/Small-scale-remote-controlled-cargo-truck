@@ -50,3 +50,29 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+# Altium thumbnail files
+**/__Previews/
+# Altium backup archives
+**/History/
+# Generated output files
+Project\ Outputs*/
+Project\ Logs*/
+Assembly\ Exports/
+*.rawProject\ Outputs*/
+# Altium metadata file
+*.PcbDoc.htm
+# Various Altium files
+*.PrjPCBStructure
+*.SchDocPreview
+*.PcbDocPreview
+__Previews
+*.PrjPcbStructure
+*.Dat
+*.REP 
+*.TLT
+*.LOG
+*.log
+*.htm
+*.$$$
