@@ -12,4 +12,4 @@ Dit zal allemaal gevoed worden door een 5s13p batterijpack van lithiumcellen, be
 
 ##Afstandsbediening
 Het afstandsbediening bevat 2 joysticks om gas te geven of te remmen en te sturen. Een aantal drukknoppen om de lichten te bedienen en een rotary encoder om de helderheid van de fare in te stellen.
-De communicatie gebeurd om de 2.4GHz band met de NRF24L01+ chip
+De communicatie gebeurd op de 2.4GHz band met de NRF24L01+ chip
