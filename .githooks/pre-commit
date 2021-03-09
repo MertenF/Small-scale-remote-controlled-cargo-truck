@@ -20,8 +20,11 @@ case "${unameOut}" in
 esac
 
 if [ ${machine} == Win ] || [ ${machine} == MinGw ] || [ ${machine} == Cygwin ]; then 
-  ALLSPICE=~/AppData/Local/Programs/allspice/resources/utils/allspice.dist/allspice
+  echo "1"
+  ALLSPICE=C:/Users/maart/AppData/Local/Programs/allspice/resources/utils/allspice.dist/allspice
+#  ALLSPICE=~/AppData/Local/Programs/allspice/resources/utils/allspice.dist/allspice
 elif [ ${machine} == Mac ] || [ ${machine} == Linux ]; then 
+  echo "2"
   ALLSPICE=/Applications/allspice/MacOS/allspice/resources/utils/allspice.dist/allspice
 else
   echo "Unsupported machine ${machine}"; exit 1

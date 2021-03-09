@@ -76,3 +76,4 @@ __Previews
 *.log
 *.htm
 *.$$$
+.githooks/pre-commit
