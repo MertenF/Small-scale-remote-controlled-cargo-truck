@@ -1,0 +1,6 @@
+[ProjectGroup]
+Version=1.0
+[Project1]
+ProjectPath=Afstandsbediening\afstandsbediening.PrjPcb
+[Project2]
+ProjectPath=Truck\Lichten.PrjPcb
