@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="600mm"
+   height="300mm"
+   viewBox="0 0 600 300"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="afstandsbediening.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="942.38145"
+     inkscape:cy="535.73321"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,3)">
+    <rect
+       style="opacity:1;vector-effect:none;fill:#ececec;fill-opacity:1;fill-rule:evenodd;stroke:#ff0000;stroke-width:0.1167386;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect3713"
+       width="191.48326"
+       height="79.383263"
+       x="148.89865"
+       y="79.024963" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.22582194px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 197.28327,159.29364 c -13.67232,0 -17.10598,-1.53533 -26.35951,7.32452 -7.31071,6.99968 -14.62141,13.99936 -21.93212,20.99904 -15.01729,11.19193 -27.41062,19.37955 -23.47284,-4.51927 0,0 7.51507,-104.725536 25.65805,-105.131284 62.20981,0.03033 124.41786,0.181271 186.62788,0.181275 18.14298,0.405748 25.65805,105.131289 25.65805,105.131289 3.93778,23.89882 -8.45555,15.7112 -23.47284,4.51927 -7.31071,-6.99968 -14.62141,-13.99936 -21.93212,-20.99904 -9.25353,-8.85985 -12.68719,-7.32452 -26.35951,-7.32452 -31.47173,-0.11425 -62.94293,-0.18128 -94.41504,-0.18128 z"
+       id="path3734-6-5"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccccc" />
+  </g>
+</svg>
