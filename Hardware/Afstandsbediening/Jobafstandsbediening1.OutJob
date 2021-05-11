@@ -17,11 +17,11 @@ RevisionNamingSchemeGUID=
 [OutputGroup1]
 Name=Jobafstandsbediening1.OutJob
 Description=
-TargetOutputMedium=PDF
+TargetOutputMedium=Folder Structure
 VariantName=[No Variations]
 VariantScope=1
 CurrentConfigurationName=
-TargetPrinter=Virtual Printer
+TargetPrinter=Canon MG4200 series Printer
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputMedium1=Print Job
 OutputMedium1_Type=Printer
@@ -94,7 +94,7 @@ OutputVariantName3=
 OutputEnabled3=0
 OutputEnabled3_OutputMedium1=0
 OutputEnabled3_OutputMedium2=0
-OutputEnabled3_OutputMedium3=1
+OutputEnabled3_OutputMedium3=0
 OutputEnabled3_OutputMedium4=0
 OutputDefault3=0
 Configuration3_Name1=OutputConfigurationParameter1
@@ -104,7 +104,7 @@ OutputName4=layers
 OutputCategory4=Documentation
 OutputDocumentPath4=
 OutputVariantName4=
-OutputEnabled4=1
+OutputEnabled4=0
 OutputEnabled4_OutputMedium1=0
 OutputEnabled4_OutputMedium2=1
 OutputEnabled4_OutputMedium3=0
@@ -136,11 +136,59 @@ Configuration4_Item11=CArc=Full|CFill=Full|Comment=Full|Coordinate=Full|CPad=Ful
 Configuration4_Name12=OutputConfigurationParameter12
 Configuration4_Item12=CArc=Full|CFill=Full|Comment=Full|Coordinate=Full|CPad=Full|CRegion=Full|CText=Full|CTrack=Full|CVia=Full|Designator=Full|Dimension=Full|DLayer1=TopLayer|DLayer2=BottomLayer|DrillType=Regular|FArc=Full|FFill=Full|FPad=Full|FRegion=Full|FText=Full|FTrack=Full|FVia=Full|Layer=TopSolder|Polygon=Full|PrintOutIndex=1|Record=PcbPrintLayer
 PcbPrintPreferences4=
+OutputType5=Gerber
+OutputName5=Gerber Files
+OutputCategory5=Fabrication
+OutputDocumentPath5=
+OutputVariantName5=
+OutputEnabled5=0
+OutputEnabled5_OutputMedium1=0
+OutputEnabled5_OutputMedium2=0
+OutputEnabled5_OutputMedium3=0
+OutputEnabled5_OutputMedium4=0
+OutputDefault5=0
+Configuration5_Name1=OutputConfigurationParameter1
+Configuration5_Item1=AddToAllLayerClasses.Set= |AddToAllPlots.Set=SerializeLayerHash.Version~2,ClassName~TLayerToBoolean|CentrePlots=False|DrillDrawingSymbol=GraphicsSymbol|DrillDrawingSymbolSize=200000|EmbeddedApertures=True|FilmBorderSize=10000000|FilmXSize=200000000|FilmYSize=160000000|FlashAllFills=False|FlashPadShapes=True|G54OnApertureChange=False|GenerateDRCRulesFile=True|GenerateDRCRulesFile=True|GenerateReliefShapes=True|GerberUnit=Imperial|GerberUnit=Imperial|IncludeUnconnectedMidLayerPads=False|LayerClassesMirror.Set= |LayerClassesPlot.Set= |LeadingAndTrailingZeroesMode=SuppressLeadingZeroes|MaxApertureSize=2500000|MinusApertureTolerance=50|MinusApertureTolerance=50|Mirror.Set=SerializeLayerHash.Version~2,ClassName~TLayerToBoolean|MirrorDrillDrawingPlots=False|MirrorDrillGuidePlots=False|NoRegularPolygons=False|NumberOfDecimals=5|NumberOfDecimals=5|OptimizeChangeLocationCommands=True|OptimizeChangeLocationCommands=True|OriginPosition=Relative|Panelize=False|Plot.Set=SerializeLayerHash.Version~2,ClassName~TLayerToBoolean,16973830~1,16973832~1,16973834~1,16777217~1,16842751~1,16973835~1,16973833~1,16973831~1,16908290~1|PlotPositivePlaneLayers=False|PlotUsedDrillDrawingLayerPairs=False|PlotUsedDrillGuideLayerPairs=False|PlusApertureTolerance=50|PlusApertureTolerance=50|Record=GerberView|SoftwareArcs=False|Sorted=False|Sorted=False
+OutputType6=NC Drill
+OutputName6=NC Drill Files
+OutputCategory6=Fabrication
+OutputDocumentPath6=
+OutputVariantName6=
+OutputEnabled6=0
+OutputEnabled6_OutputMedium1=0
+OutputEnabled6_OutputMedium2=0
+OutputEnabled6_OutputMedium3=0
+OutputEnabled6_OutputMedium4=0
+OutputDefault6=0
+Configuration6_Name1=OutputConfigurationParameter1
+Configuration6_Item1=BoardEdgeRoutToolDia=2000000|GenerateBoardEdgeRout=False|GenerateDrilledSlotsG85=False|GenerateEIADrillFile=False|GenerateSeparatePlatedNonPlatedFiles=False|NumberOfDecimals=5|NumberOfUnits=2|OptimizeChangeLocationCommands=True|OriginPosition=Relative|Record=DrillView|Units=Imperial|ZeroesMode=SuppressTrailingZeroes
+OutputType7=BOM_PartType
+OutputName7=Bill of Materials
+OutputCategory7=Report
+OutputDocumentPath7=
+OutputVariantName7=
+OutputEnabled7=1
+OutputEnabled7_OutputMedium1=0
+OutputEnabled7_OutputMedium2=0
+OutputEnabled7_OutputMedium3=1
+OutputEnabled7_OutputMedium4=0
+OutputDefault7=0
+PageOptions7=Record=PageOptions|CenterHorizontal=True|CenterVertical=True|PrintScale=1.00|XCorrection=1.00|YCorrection=1.00|PrintKind=1|BorderSize=5000000|LeftOffset=0|BottomOffset=0|Orientation=2|PaperLength=1000|PaperWidth=1000|Scale=100|PaperSource=7|PrintQuality=-3|MediaType=1|DitherType=10|PrintScaleMode=1|PaperKind=Letter 8.5"x11" 22x28cm|PaperIndex=1
+Configuration7_Name1=ColumnNameFormat
+Configuration7_Item1=CaptionAsName
+Configuration7_Name2=General
+Configuration7_Item2=OpenExported=False|AddToProject=False|ReportBOMViolationsInMessages=False|ForceFit=False|NotFitted=False|Database=True|DatabasePriority=False|IncludePcbData=True|IncludeVaultData=True|IncludeCloudData=False|IncludeDocumentData=True|IncludeAlternatives=False|ShowExportOptions=True|TemplateFilename=..\BOM Purchase FEDEVEL Live.xltx|TemplateVaultGuid=|TemplateRevisionGuid=|BatchMode=5|FormWidth=840|FormHeight=696|SupplierProdQty=1|SupplierAutoQty=False|SupplierUseCachedPricing=False|SupplierCurrency=EUR|SolutionsPerItem=1|SuppliersPerSolution=1|ViewType=1|UseDirectApi=False|BomSetName=
+Configuration7_Name3=GroupOrder
+Configuration7_Item3=LibRef=True|Category=True
+Configuration7_Name4=SortOrder
+Configuration7_Item4=Description=Down
+Configuration7_Name5=VisibleOrder
+Configuration7_Item5=Comment=120|Description=120|Designator=120|Footprint=120|LibRef=120|Quantity=120
 
 [PublishSettings]
 OutputFilePath2=Project Outputs for Free Documents\Jobafstandsbediening1.PDF
 ReleaseManaged2=1
-OutputBasePath2=Project Outputs for Free Documents
+OutputBasePath2=Project Outputs for afstandsbediening
 OutputPathMedia2==OutputName
 OutputPathMediaValue2==OutputName
 OutputPathOutputer2=[Output Type]
@@ -180,7 +228,7 @@ OutputFileNameSpecial3=
 OpenOutput3=1
 OutputFilePath4=
 ReleaseManaged4=1
-OutputBasePath4=
+OutputBasePath4=Project Outputs for afstandsbediening
 OutputPathMedia4=
 OutputPathMediaValue4=
 OutputPathOutputer4=[Output Type]
