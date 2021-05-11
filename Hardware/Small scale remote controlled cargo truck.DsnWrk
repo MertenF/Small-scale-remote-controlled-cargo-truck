@@ -4,3 +4,5 @@ Version=1.0
 ProjectPath=Afstandsbediening\afstandsbediening.PrjPcb
 [Project2]
 ProjectPath=Truck\Lichten.PrjPcb
+[Project3]
+ProjectPath=Mainpcb\mainpcb\mainpcb.PrjPcb
