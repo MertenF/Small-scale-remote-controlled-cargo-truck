@@ -27,6 +27,8 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/unistd.h>
+
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,6 +53,7 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 // NRF commando's
@@ -102,7 +105,22 @@ uint32_t servoMin = (servoMinAbs+servoMaxAbs)/2-1000;
 uint32_t servoMax = (servoMinAbs+servoMaxAbs)/2+1000;
 uint8_t RecData[32] = {0};
 uint8_t counter = 0;
-uint8_t isDataAvailable (uint8_t);
+
+struct IOs {
+	bool Left_Button;
+	bool Up_Button;
+	bool Down_Button;
+	bool Rotary_Button;
+	bool Joy2_Button;
+	bool FrontLeft_Button;
+	bool FrontRight_Button;
+	uint8_t Joy1_UpDown;
+	uint8_t Joy2_UpDown;
+	uint8_t Joy2_LeftRight;
+} Status_IO;
+
+uint8_t rxd[10] = {0};
+uint8_t UART3_rxBuffer[13] = {0};
 
 /* USER CODE END PV */
 
@@ -110,10 +128,11 @@ uint8_t isDataAvailable (uint8_t);
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_USART2_UART_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_SPI3_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void Write8_Register_NRF(uint8_t, uint8_t);
 uint8_t Read8_Register_NRF(uint8_t);
@@ -123,6 +142,11 @@ void Send_Data(uint8_t*);
 void NRF_Setup(void);
 void WriteX_Register_NRF(uint8_t, uint8_t*, uint8_t);
 void Data_Receive(uint8_t*);
+uint8_t isDataAvailable (uint8_t);
+
+void Set_Servo_Angle(uint8_t);
+void Set_Motor_Speed(uint8_t);
+void Print_IO(void);
 
 /* USER CODE END PFP */
 
@@ -182,32 +206,34 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM3_Init();
-  MX_USART2_UART_Init();
   MX_TIM4_Init();
   MX_SPI2_Init();
   MX_SPI3_Init();
+  MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   printf("starting up: ");
+
+
+  HAL_UART_Receive_IT(&huart3, UART3_rxBuffer, 13);
+
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); //servo
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2); //motor 1
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3); //motor 2
 
-  TIM3->CCR1 = (servoMin+servoMax)/2;
-  TIM3->CCR2 = motorMin;
+  TIM3->CCR1 = (servoMin+servoMax)/2; //servo in het midden zetten
+  TIM3->CCR2 = motorMin; //motors minimum power geven
   TIM3->CCR3 = motorMin;
 
-  HAL_Delay(2000);
-  NRF_Setup();
+
+  HAL_Delay(400); //ESC heeft bij opstarten een tijdje minimum signaal nodig
+  //NRF_Setup();
+
 
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); //toeter
   TIM4->CCR1 = 50; //50% duty cycle
-
-  uint32_t servoWaarde = 1565; //minimum waarde servo
-  uint32_t motorWaarde = 3130; //minimum waarde motor
-
-  printf("OK\r\n");
 
   /* USER CODE END 2 */
 
@@ -215,37 +241,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  HAL_Delay(400);
+	  //printf("\r\nwhile loop truck: %02X\r\n", counter++);
 
 
-	  printf("while loop truck: %02X\r\n", counter++);
-	  if (isDataAvailable(0)) {
-		  Data_Receive(RecData);
-		  printf("Data:%s\r\n", RecData);
-		  for (uint8_t i =0; i<32; i++) {
-			  printf("%02X ", RecData[i]);
-		  } printf("\r\n");
-	  } else {
-		  printf("Geen data beschikbaar\r\n");
-	  }
+	  //Print_IO();
 
 
+	  Set_Motor_Speed(Status_IO.Joy1_UpDown);
+	  Set_Servo_Angle(Status_IO.Joy2_LeftRight);
 
-	  HAL_Delay(100);
+	  //get data
+	  //setup data
 
-/*	  TIM3->CCR2 = motorMin+150;
-	  TIM3->CCR3 = motorMin+150;
-	  for (uint32_t i = servoMin; i<(servoMax-1500); i++) {
-		  //TIM3->CCR1 = i;
-		  HAL_Delay(1);
-	  }
-	  //TIM3->CCR1 = (servoMin+servoMax)/2-1000;
-	  TIM3->CCR2 = motorMin;
-	  TIM3->CCR3 = motorMin;
-	  printf("while loop motor less\r\n");
-	  for (uint32_t i = servoMax; i>servoMin; i--) {
-	  		  //TIM3->CCR1 = i;
-	  		  HAL_Delay(50);
-	  	  }*/
 
     /* USER CODE END WHILE */
 
@@ -291,8 +299,10 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_TIM34;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
+                              |RCC_PERIPHCLK_TIM34;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
   PeriphClkInit.Tim34ClockSelection = RCC_TIM34CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -523,7 +533,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 19200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -539,6 +549,41 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 19200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
 
 }
 
@@ -596,6 +641,92 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+uint8_t Count13(uint8_t val) {
+	if (val<13) {
+		return val;
+	} else {
+		return (val-13);
+	}
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	for(uint8_t i = 0; i<13; i++) {
+		printf("%u ", UART3_rxBuffer[i]);
+	} printf("\r\n");
+
+	uint8_t i = 0;
+	while (UART3_rxBuffer[Count13(i)] != 0x41 || UART3_rxBuffer[Count13(i+1)] != 0x41 || UART3_rxBuffer[Count13(i+2)] != 0x41) {
+		i++;
+	}
+	//printf("bytes shifted: %u", i);
+
+	Status_IO.Left_Button = UART3_rxBuffer[Count13(i+3)];
+	Status_IO.Up_Button = UART3_rxBuffer[Count13(i+4)];
+	Status_IO.Down_Button = UART3_rxBuffer[Count13(i+5)];
+	Status_IO.Rotary_Button = UART3_rxBuffer[Count13(i+6)];
+	Status_IO.Joy2_Button = UART3_rxBuffer[Count13(i+7)];
+	Status_IO.FrontLeft_Button = UART3_rxBuffer[Count13(i+8)];
+	Status_IO.FrontRight_Button = UART3_rxBuffer[Count13(i+9)];
+	Status_IO.Joy1_UpDown = UART3_rxBuffer[Count13(i+10)];
+	Status_IO.Joy2_UpDown = UART3_rxBuffer[Count13(i+11)];
+	Status_IO.Joy2_LeftRight = UART3_rxBuffer[Count13(i+12)];
+
+	//Print_IO();
+
+    HAL_UART_Receive_IT(&huart3, UART3_rxBuffer, 13);
+}
+
+void Print_IO() {
+	printf("IO status:\r\n");
+	printf("Buttons: LB=%d, UB=%d, DB=%d, RB=%d, J2B=%d\r\n",
+			Status_IO.Left_Button,
+			Status_IO.Up_Button,
+			Status_IO.Down_Button,
+			Status_IO.Rotary_Button,
+			Status_IO.Joy2_Button);
+
+	printf("ADC: 1-UD=%u, 2-UD=%u, 2-LR=%u\r\n",
+			Status_IO.Joy1_UpDown,
+			Status_IO.Joy2_UpDown,
+			Status_IO.Joy2_LeftRight);
+}
+
+void Read_Data() {
+	//fill
+}
+
+
+void Set_Motor_Speed(uint8_t speed) {
+	uint32_t signal = (motorMax-motorMin)*speed/255+motorMin;
+
+	if (signal<motorMin) {
+		printf("Motor signal to low: %lu\r\n", signal);
+		signal = motorMin;
+	} else if (signal > motorMax) {
+		printf("Motor signal to high: %lu\r\n", signal);
+		signal = motorMax;
+	}
+
+	TIM3->CCR2 = signal;
+	TIM3->CCR3 = signal;
+}
+
+void Set_Servo_Angle(uint8_t angle) {
+	uint32_t signal = (servoMax-servoMin)*angle/255+servoMin;
+
+	if (signal<servoMin) {
+		printf("Servo signal to low: %lu\r\n", signal);
+		signal = servoMin;
+	} else if (signal > servoMax) {
+		printf("Servo signal to high: %lu\r\n", signal);
+		signal = servoMax;
+	}
+
+	TIM3->CCR1 = signal;
+}
+
 uint8_t Read8_Register_NRF(uint8_t reg) {
 	uint8_t data = 0;
 
@@ -623,11 +754,9 @@ void Write8_Register_NRF(uint8_t reg, uint8_t data) {
 void WriteX_Register_NRF(uint8_t reg, uint8_t *data, uint8_t size) {
 	CSN_Select();
 
-	uint8_t buf[2];
-	buf[0] = reg|1<<5;
+	uint8_t cmd = reg|W_REGISTER;
 
-	// Pull the CS Pin LOW to select the device
-	HAL_SPI_Transmit(&hspi2, buf, 1, 100);
+	HAL_SPI_Transmit(&hspi2, &cmd, 1, 100);
 	HAL_SPI_Transmit(&hspi2, data, size, 1000);
 	/*
 	uint8_t sent[1+size];
@@ -674,9 +803,12 @@ void Send_Data(uint8_t *data) {
 	HAL_SPI_Transmit(&hspi2, &cmd, 1, 100);
 	HAL_SPI_Transmit(&hspi2, data, 32, 1000);
 	CSN_Deselect();
-	//Read8_Register_NRF(OBSERVE_TX);
 
-	uint8_t fifostatus = 0; //Read8_Register_NRF(FIFO_STATUS);
+	printf("observe tx");
+	Read8_Register_NRF(OBSERVE_TX);
+
+	printf("fifo status");
+	uint8_t fifostatus = Read8_Register_NRF(FIFO_STATUS);
 	// check the fourth bit of FIFO_STATUS to know if the TX fifo is empty
 	if ((fifostatus&(1<<4)) && (!(fifostatus&(1<<3))))
 		{
@@ -691,9 +823,12 @@ void Send_Data(uint8_t *data) {
 
 uint8_t isDataAvailable (uint8_t pipenum)
 {
+	printf("Status ");
 	uint8_t status = Read8_Register_NRF(STATUS);
+	printf("FIFO_STATUS ");
+	Read8_Register_NRF(FIFO_STATUS);
 
-	if ((status&(1<<6))&&(status&(pipenum<<1)))
+	if ((status&(1<<6))||1) //&&(status&(pipenum<<1))
 	{
 
 		Write8_Register_NRF(STATUS, (1<<6));
@@ -708,6 +843,8 @@ void NRF_Setup() {
 	printf("\r\n\r\nBegin setup NRFFF\r\n");
 	CSN_Deselect();
 	HAL_GPIO_WritePin(nrf_ce_GPIO_Port, nrf_ce_Pin, GPIO_PIN_RESET);
+
+	HAL_Delay(50);
 
 	Read8_Register_NRF(SETUP_AW);
 	Write8_Register_NRF(SETUP_AW, 0x03);
@@ -728,10 +865,10 @@ void NRF_Setup() {
 	Read8_Register_NRF(RF_SETUP);
 
 	Write8_Register_NRF(EN_AA, 1);
-	Write8_Register_NRF(SETUP_RETR, 0x03);
+	Write8_Register_NRF(SETUP_RETR, 0b01001111);
 
 	ReadX_Register_NRF(TX_ADDR, 5);
-	uint8_t addr[5] = {0, 1, 2, 3, 4};
+	uint8_t addr[6] = "00001";
 	WriteX_Register_NRF(TX_ADDR, addr, 5);
 	ReadX_Register_NRF(TX_ADDR, 5);
 
@@ -745,8 +882,12 @@ void NRF_Setup() {
 
 	Read8_Register_NRF(RX_PW_P0);
 	Write8_Register_NRF(RX_PW_P0, 32);
-	Read8_Register_NRF(RX_ADDR_P0);
+	Read8_Register_NRF(RX_PW_P0);
 
+	printf("Status: ");
+	uint8_t sta = Read8_Register_NRF(STATUS);
+	Write8_Register_NRF(STATUS, sta);
+	Read8_Register_NRF(STATUS);
 
 
 	//set nrf ce voor te enabled te gaan

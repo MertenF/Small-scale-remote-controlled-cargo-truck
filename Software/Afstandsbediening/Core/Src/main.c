@@ -27,6 +27,8 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/unistd.h>
+
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -94,8 +96,31 @@ const uint8_t FIFO_STATUS = 0x17;
 const uint8_t DYNPD = 0x1C;
 const uint8_t FEATURE = 0x1D;
 
+const uint16_t ADC_MIN = 0;
+const uint16_t ADC_MAX = 4090;
+
 uint32_t adc_results[4];
 uint8_t count = 0;
+
+struct CalValADC {
+	uint16_t Joy1_UpDown;
+	uint16_t Joy2_UpDown;
+	uint16_t Joy2_LeftRight;
+} defaultAdc;
+
+struct IOs {
+	bool Left_Button;
+	bool Up_Button;
+	bool Down_Button;
+	bool Rotary_Button;
+	bool Joy2_Button;
+	bool FrontLeft_Button;
+	bool FrontRight_Button;
+	uint8_t Joy1_UpDown;
+	uint8_t Joy2_UpDown;
+	uint8_t Joy2_LeftRight;
+} Status_IO;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,6 +139,11 @@ void CSN_Deselect(void);
 void Send_Data(uint8_t*);
 void NRF_Setup(void);
 void WriteX_Register_NRF(uint8_t, uint8_t*, uint8_t);
+void Read_Buttons(void);
+void Calibrate_ADC(void);
+void Print_IO(void);
+uint8_t Regulate_ADC_UpDown(uint32_t, uint16_t);
+uint8_t Regulate_ADC_LeftRight(uint32_t, uint16_t);
 
 /* USER CODE END PFP */
 
@@ -183,44 +213,41 @@ int main(void)
 
   //calbrate de ADC
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+  HAL_ADC_Start_DMA(&hadc1, adc_results, 4);
 
-  NRF_Setup();
-
-
+  //NRF_Setup();
+  HAL_Delay(300);
+  Calibrate_ADC();
+  //printf("started up \r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_GPIO_WritePin(piezo_GPIO_Port, piezo_Pin, GPIO_PIN_SET);
+	  //printf("\r\nWhile afstandsbediening %02X\r\n", count++);
 
-	  if (HAL_GPIO_ReadPin(button_left_GPIO_Port, button_left_Pin) == GPIO_PIN_RESET)
-	  	  { printf("Button left\r\n"); }
-	  if (HAL_GPIO_ReadPin(button_up_GPIO_Port, button_up_Pin) == GPIO_PIN_RESET)
-	  	  { printf("Button up\r\n"); }
-	  if (HAL_GPIO_ReadPin(button_down_GPIO_Port, button_down_Pin) == GPIO_PIN_RESET)
-	  	  { printf("Button down\r\n"); }
-	  if (HAL_GPIO_ReadPin(rotary_switch_GPIO_Port, rotary_switch_Pin) == GPIO_PIN_RESET)
-	  	  { printf("Rotary switch\r\n"); }
-	  if (HAL_GPIO_ReadPin(joy2_knop_GPIO_Port, joy2_knop_Pin) == GPIO_PIN_RESET)
-	  	  { printf("Button joystick 2\r\n"); }
+	  Read_Buttons();
+	  //Print_IO();
 
-	  HAL_ADC_Start_DMA(&hadc1, adc_results, 4);
+	  uint8_t startSequence[3] = {0x42, 0x42, 0x42}; //BBB
 
-	  uint8_t string[32] = "test";
+	  HAL_UART_Transmit(&huart1, &startSequence, 3, 100);
+	  HAL_UART_Transmit(&huart1, &Status_IO, 10, 1000);
+
+	  //HAL_UART_Transmit(&huart1, &stopByte, 1, 100);
+
+	  HAL_Delay(400);
+
+	  /*uint8_t string[32] = "test";
 	  printf("Data:%s\r\n", string);
 	  	  for (uint8_t i =0; i<32; i++) {
 	  		  printf("%02X ", string[i]);
 	  	  } printf("\r\n");
-	  Send_Data(string);
+	  Send_Data(string);*/
 
 	  //printf("ADC: %lu R-BO:%lu L-BO:%lu L-RL:%lu\r\n", adc_results[0], adc_results[1], adc_results[2], adc_results[3]);
 
-
-	  HAL_GPIO_WritePin(piezo_GPIO_Port, piezo_Pin, GPIO_PIN_RESET);
-	  printf("While afstandsbediening %02X\r\n", count++);
-	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -376,19 +403,18 @@ static void MX_SPI1_Init(void)
   /* USER CODE END SPI1_Init 1 */
   /* SPI1 parameter configuration*/
   hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Mode = SPI_MODE_SLAVE;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
@@ -518,6 +544,67 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void Calibrate_ADC() {
+	defaultAdc.Joy1_UpDown = adc_results[1];
+	defaultAdc.Joy2_UpDown = adc_results[2];
+	defaultAdc.Joy2_LeftRight = adc_results[3];
+}
+
+//waardes naar een schaal van 0-255 omrekenen
+uint8_t Regulate_ADC_UpDown(uint32_t value, uint16_t defaultt) {
+	uint32_t result;
+	if (value > defaultt) {
+		result = 0;
+	} else {
+		result = (defaultt-value)*255/(defaultt-ADC_MIN);
+	}
+
+	return (uint8_t)result;
+}
+
+uint8_t Regulate_ADC_LeftRight(uint32_t value, uint16_t defaultt) {
+	uint16_t result;
+	if (value < defaultt) { //links
+		result = 128-(defaultt-value)*127/(defaultt-ADC_MIN);
+	} else { //rechts
+		result = (value-defaultt)*127/(ADC_MAX-defaultt)+128;
+	}
+	return (uint8_t)result;
+}
+
+void Read_Buttons() {
+
+	HAL_ADC_Start_DMA(&hadc1, adc_results, 4);
+
+	Status_IO.Left_Button = !HAL_GPIO_ReadPin(button_left_GPIO_Port, button_left_Pin);
+	Status_IO.Up_Button = !HAL_GPIO_ReadPin(button_up_GPIO_Port, button_up_Pin);
+	Status_IO.Down_Button = ! HAL_GPIO_ReadPin(button_down_GPIO_Port, button_down_Pin);
+	Status_IO.Rotary_Button = !HAL_GPIO_ReadPin(rotary_switch_GPIO_Port, rotary_switch_Pin);
+	Status_IO.Joy2_Button = !HAL_GPIO_ReadPin(joy2_knop_GPIO_Port, joy2_knop_Pin);
+
+	Status_IO.Joy1_UpDown = Regulate_ADC_UpDown(adc_results[1], defaultAdc.Joy1_UpDown);
+	//printf("%u %u \r\n", adc_results[1], defaultAdc.Joy1_UpDown);
+	Status_IO.Joy2_UpDown = Regulate_ADC_UpDown(adc_results[2], defaultAdc.Joy2_UpDown);
+	//printf("%u %u \r\n", adc_results[2], defaultAdc.Joy2_UpDown);
+	Status_IO.Joy2_LeftRight = Regulate_ADC_LeftRight(adc_results[3], defaultAdc.Joy2_LeftRight);
+}
+
+void Print_IO() {
+	printf("IO status:\r\n");
+	printf("Buttons: LB=%d, UB=%d, DB=%d, RB=%d, J2B=%d\r\n",
+			Status_IO.Left_Button,
+			Status_IO.Up_Button,
+			Status_IO.Down_Button,
+			Status_IO.Rotary_Button,
+			Status_IO.Joy2_Button);
+
+	printf("ADC: 1-UD=%u, 2-UD=%u, 2-LR=%u\r\n",
+			Status_IO.Joy1_UpDown,
+			Status_IO.Joy2_UpDown,
+			Status_IO.Joy2_LeftRight);
+}
+
 uint8_t Read8_Register_NRF(uint8_t reg) {
 	uint8_t data = 0;
 
@@ -563,7 +650,7 @@ uint8_t* ReadX_Register_NRF(uint8_t reg, uint8_t size) {
 		printf("%02X ", i);
 	}
 	printf("\r\n");
-	return data;
+	return 0;
 }
 
 void Send_Cmd(uint8_t cmd) {
@@ -575,13 +662,27 @@ void Send_Cmd(uint8_t cmd) {
 void Send_Data(uint8_t *data) {
 
 	uint8_t cmd = W_TXPAYLOAD;
+
+	uint8_t payload[33] = {0};
+	payload[0] = cmd;
+	for (uint8_t i = 1; i<=32; i++) {
+		payload[i] = data[i-1];
+	}
+
 	CSN_Select();
 	HAL_SPI_Transmit(&hspi1, &cmd, 1, 100);
-	HAL_SPI_Transmit(&hspi1, data, 32, 10000);
+	/*for (uint8_t i = 0; i<32; i++) {
+		HAL_SPI_Transmit(&hspi1, &data[i], 1, 100);
+	}*/
+	//HAL_SPI_Transmit(&hspi1, data, 32, 3201);
+	//HAL_SPI_Transmit(&hspi1, payload, 33, 1000);
 	CSN_Deselect();
 
 	printf("observe tx ");
 	Read8_Register_NRF(OBSERVE_TX);
+
+	printf("Status: ");
+	Read8_Register_NRF(STATUS);
 
 	uint8_t fifostatus = Read8_Register_NRF(FIFO_STATUS);
 	// check the fourth bit of FIFO_STATUS to know if the TX fifo is empty
@@ -600,34 +701,41 @@ void NRF_Setup() {
 	CSN_Deselect();
 	HAL_GPIO_WritePin(nrf_CE_GPIO_Port, nrf_CE_Pin, GPIO_PIN_RESET);
 
-	printf("SETUP_AW: ");
-	Write8_Register_NRF(SETUP_AW, 0x03);
-	Read8_Register_NRF(SETUP_AW);
-
 	printf("CONFIG: ");
 	Write8_Register_NRF(CONFIG, 0b00001010); //power up bit
 	Read8_Register_NRF(CONFIG);
 	HAL_Delay(10);
 
+	printf("SETUP_AW: ");
+	Write8_Register_NRF(SETUP_AW, 0x03);
+	Read8_Register_NRF(SETUP_AW);
+	HAL_Delay(10);
+
 	printf("RF_CH: ");
 	Write8_Register_NRF(RF_CH, 15); //zet channel naar 15
 	Read8_Register_NRF(RF_CH);
+	HAL_Delay(10);
 
 	printf("RF_SETUP: ");
 	Write8_Register_NRF(RF_SETUP, 0x0E);  //set RF_DR_LOW (250kbit) in RF_SETUP 0b00101110
 	Read8_Register_NRF(RF_SETUP);
+	HAL_Delay(10);
 
 	Write8_Register_NRF(EN_AA, 1);
 	Write8_Register_NRF(SETUP_RETR, 0x03);
+	HAL_Delay(10);
 
 	uint8_t addr[5] = {0, 1, 2, 3, 4};
 	printf("TX_ADDR: ");
 	WriteX_Register_NRF(TX_ADDR, addr, 5);
 	ReadX_Register_NRF(TX_ADDR, 5);
+	HAL_Delay(10);
 
 	printf("RX_ADDR: ");
 	WriteX_Register_NRF(RX_ADDR_P0, addr, 5);
 	ReadX_Register_NRF(RX_ADDR_P0, 5);
+	HAL_Delay(10);
+
 
 
 	//set nrf ce voor in TX modus te gaan
