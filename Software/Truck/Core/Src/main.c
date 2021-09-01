@@ -232,8 +232,9 @@ int main(void)
   //NRF_Setup();
 
 
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); //toeter
-  TIM4->CCR1 = 50; //50% duty cycle
+  //HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); //toeter
+  //HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
+  //TIM4->CCR1 = 50; //0% duty cycle
 
   /* USER CODE END 2 */
 
@@ -241,7 +242,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_Delay(400);
+	  HAL_Delay(80);
 	  //printf("\r\nwhile loop truck: %02X\r\n", counter++);
 
 
@@ -251,6 +252,12 @@ int main(void)
 	  Set_Motor_Speed(Status_IO.Joy1_UpDown);
 	  Set_Servo_Angle(Status_IO.Joy2_LeftRight);
 
+
+	  if(Status_IO.Down_Button) {
+		  //TIM4->CCR1 = 50;
+	  } else {
+		  //TIM4-> CCR1 = 0;
+	  }
 	  //get data
 	  //setup data
 
@@ -480,7 +487,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 200;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 100;
+  htim4.Init.Period = 80;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
